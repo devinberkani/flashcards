@@ -5,7 +5,6 @@ public class Main {
 
         // get the number of cards from the user
         menu.getNumberOfCards();
-        int deckSize = menu.getDeckSize();
 
         // create a new deck of flashcards
         Deck deck = new Deck();
