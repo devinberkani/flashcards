@@ -1,37 +1,24 @@
 public class Flashcard {
-    private int number;
-    private String front;
-    private String back;
+    private String term;
+    private String definition;
 
-    public Flashcard(int number, String front, String back) {
-        this.number = number;
-        this.front = front;
-        this.back = back;
+    public Flashcard() {
     }
 
     // getters and setters
-
-    protected int getNumber() {
-        return number;
+    protected String getTerm() {
+        return term;
     }
 
-    protected void setNumber(int number) {
-        this.number = number;
+    protected void setTerm(String term) {
+        this.term = term;
     }
 
-    protected String getFront() {
-        return front;
+    protected String getDefinition() {
+        return definition;
     }
 
-    protected void setFront(String front) {
-        this.front = front;
-    }
-
-    public String getBack() {
-        return back;
-    }
-
-    public void setBack(String back) {
-        this.back = back;
+    protected void setDefinition(String definition) {
+        this.definition = definition;
     }
 }
