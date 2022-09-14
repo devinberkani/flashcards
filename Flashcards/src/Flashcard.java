@@ -1,11 +1,25 @@
 public class Flashcard {
+    private int id;
     private String term;
     private String definition;
 
     public Flashcard() {
     }
 
+    @Override
+    public String toString() {
+        return this.getDefinition();
+    }
+
     // getters and setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     protected String getTerm() {
         return term;
     }

@@ -1,77 +1,78 @@
 import java.util.LinkedHashMap;
 
 public class Deck {
-    private LinkedHashMap<Integer, Flashcard> flashcards;
-    private LinkedHashMap<String, Integer> terms;
-    private LinkedHashMap<String, Integer> definitions;
+    private LinkedHashMap<String, String> flashcards;
+    private LinkedHashMap<Integer, Flashcard> flashcardData;
     private int deckSize;
-    private int id;
 
     public Deck() {
         flashcards = new LinkedHashMap<>();
-        terms = new LinkedHashMap<>();
-        definitions = new LinkedHashMap<>();
+        flashcardData = new LinkedHashMap<>();
         deckSize = 0;
-        id = 1;
-    }
-
-    protected Flashcard getFlashcard(int id) {
-        return getFlashcards().get(id);
     }
 
     protected void addFlashcard(Flashcard flashcard) {
-        getFlashcards().put(id, flashcard);
-        getTerms().put(flashcard.getTerm(), id);
-        getDefinitions().put(flashcard.getDefinition(), id);
-        setId(getId() + 1);
+        getFlashcards().put(flashcard.getTerm(), flashcard.getDefinition());
+        getFlashcardData().put(flashcard.getId(), flashcard);
+    }
+
+    protected void removeFlashcard(String term) {
+        getFlashcards().remove(term);
+        getFlashcardData().remove(term.hashCode());
+    }
+
+    protected Flashcard getSpecificFlashcard(int id) {
+        return getFlashcardData().get(id);
     }
 
     // check flashcard inputs
 
-    protected boolean termExists(String input) {
-        return terms.containsKey(input);
+    protected boolean termExists(String term) {
+        return getFlashcards().containsKey(term);
     }
 
     protected boolean definitionExists(String definition) {
-        return definitions.containsKey(definition);
+        return getFlashcards().containsValue(definition);
     }
 
     // check user answers
 
     protected boolean answerIsCorrect(String userAnswer, int id) {
-        String correctAnswer = getFlashcards().get(id).getDefinition();
+        String correctAnswer = getFlashcardData().get(id).getDefinition();
         return userAnswer.equals(correctAnswer);
     }
 
-    protected String correctTerm(String userAnswer, int id) {
-        return getFlashcards().get(id).getTerm();
+    protected String correctDefinitionForCurrentCard(int id) {
+        return getFlashcardData().get(id).getDefinition();
+    }
+
+    protected String correctTermForDifferentCard(String userAnswer) {
+        for (var entry : getFlashcards().entrySet()) {
+            if (entry.getValue().equals(userAnswer)) {
+                return entry.getKey();
+            }
+        }
+
+        return "Flashcards do not contain a term for this definition.";
     }
 
     // getters and setters
 
 
-    protected LinkedHashMap<Integer, Flashcard> getFlashcards() {
+    public LinkedHashMap<String, String> getFlashcards() {
         return flashcards;
     }
 
-    private void setFlashcards(LinkedHashMap<Integer, Flashcard> flashcards) {
+    public void setFlashcards(LinkedHashMap<String, String> flashcards) {
         this.flashcards = flashcards;
     }
 
-    protected LinkedHashMap<String, Integer> getTerms() {
-        return terms;
+    public LinkedHashMap<Integer, Flashcard> getFlashcardData() {
+        return flashcardData;
     }
 
-    private void setTerms(LinkedHashMap<String, Integer> terms) {
-        this.terms = terms;
-    }
-
-    protected LinkedHashMap<String, Integer> getDefinitions() {
-        return definitions;
-    }
-
-    private void setDefinitions(LinkedHashMap<String, Integer> definitions) {
-        this.definitions = definitions;
+    public void setFlashcardData(LinkedHashMap<Integer, Flashcard> flashcardData) {
+        this.flashcardData = flashcardData;
     }
 
     protected int getDeckSize() {
@@ -80,13 +81,5 @@ public class Deck {
 
     protected void setDeckSize(int deckSize) {
         this.deckSize = deckSize;
-    }
-
-    private int getId() {
-        return id;
-    }
-
-    private void setId(int id) {
-        this.id = id;
     }
 }
