@@ -1,13 +1,23 @@
-public class StateMachine {
-    private State state = State.MENU;
-    private final Menu menu = new Menu();
-    private final Deck deck = new Deck();
-    private Flashcard currentCard;
-    private int currentCardNumber = 0;
+import java.util.ArrayList;
 
+public class StateMachine {
+    private State state;
+    private final Menu menu;
+    private final Deck deck;
+    private Flashcard currentCard;
+
+    // ask variables
+    private int askNumber;
+    private int currentAskNumber;
+    private ArrayList<String> askSet;
+    private String currentAskTerm;
     public StateMachine() {
+        state = State.MENU;
+        menu = new Menu();
+        deck = new Deck();
     }
 
+    // MENU
     private String handleMenu(String command) {
         switch(command) {
             case "add":
@@ -18,6 +28,22 @@ public class StateMachine {
             setState(State.REMOVE);
             return "Which card?";
 
+            case "ask":
+            setState(State.GET_ASK_NUMBER);
+            return "How many times to ask?";
+
+            case "import":
+                setState(State.IMPORT);
+                return "File name:";
+
+            case "export":
+                setState(State.EXPORT);
+                return "File name:";
+
+            case "exit":
+                setState(State.EXIT);
+                return "Bye bye!";
+
             default:
                 return "";
 
@@ -25,18 +51,15 @@ public class StateMachine {
     }
 
     // ADD
-
     private String handleAddTerm(String userTerm) {
         if (getDeck().termExists(userTerm)) {
             setState(State.MENU);
-            return String.format("The term \"%s\" already exists.", userTerm);
+            return String.format("The card \"%s\" already exists.", userTerm);
         }
-        setCurrentCardNumber(getCurrentCardNumber() + 1);
-        setCurrentCard(new Flashcard());
-        getCurrentCard().setId(userTerm.hashCode()); // set generated hash code as flashcard id
-        getCurrentCard().setTerm(userTerm);
         setState(State.ADD_DEFINITION);
-        return String.format("The definition for card #%d:", getCurrentCardNumber());
+        setCurrentCard(new Flashcard());
+        getCurrentCard().setTerm(userTerm);
+        return "The definition of the card:";
     }
 
     private String handleAddDefinition(String userDefinition) {
@@ -45,40 +68,66 @@ public class StateMachine {
             return String.format("The definition \"%s\" already exists.", userDefinition);
         }
         getCurrentCard().setDefinition(userDefinition);
-        getDeck().addFlashcard(getCurrentCard());
+        getDeck().addFlashcardToDeck(getCurrentCard());
         return String.format("The pair (\"%s\":\"%s\") has been added.", getCurrentCard().getTerm(), getCurrentCard().getDefinition());
     }
 
+    // REMOVE
     private String handleRemove(String cardToBeRemoved) {
         setState(State.MENU);
         if (!getDeck().termExists(cardToBeRemoved)) {
             return String.format("Can't remove \"%s\": there is no such card.", cardToBeRemoved);
         }
-        getDeck().removeFlashcard(cardToBeRemoved);
+        getDeck().removeFlashcardFromDeck(cardToBeRemoved);
         return "The card has been removed.";
     }
 
-    private String handleAnswer(String userAnswer) {
+    // ASK
+    private String handleAskNumber(String numberOfCardsToShow) {
+        int numberOfCards = Integer.parseInt(numberOfCardsToShow);
+        setState(State.ASK);
+        setAskSet(getDeck().getAskSet(numberOfCards));
+        setAskNumber(numberOfCards);
+        setCurrentAskNumber(0);
+        setCurrentAskTerm(getAskSet().get(getCurrentAskNumber()));
+        return (String.format("Print the definition of \"%s\":", getCurrentAskTerm()));
+    }
+
+    private String handleAsk(String userAnswer) {
         StringBuilder response = new StringBuilder();
-        if (getDeck().answerIsCorrect(userAnswer, getCurrentCardNumber())) {
+        if (getDeck().answerIsCorrect(userAnswer, getCurrentAskTerm().hashCode())) {
             response.append("Correct!");
         } else {
-            response.append(String.format("Wrong. The right answer is \"%s\"", getDeck().correctDefinitionForCurrentCard(getCurrentCardNumber())));
+            response.append(String.format("Wrong. The right answer is \"%s\"", getDeck().correctDefinitionForCurrentCard(getCurrentAskTerm().hashCode())));
             if (getDeck().definitionExists(userAnswer)) {
                 response.append(String.format(", but your definition is correct for \"%s\"", getDeck().correctTermForDifferentCard(userAnswer)));
             }
             response.append(".");
         }
-        if (getCurrentCardNumber() + 1 <= deck.getDeckSize()) {
-            setCurrentCardNumber(getCurrentCardNumber() + 1);
+        if (getCurrentAskNumber() + 1 < getAskNumber()) {
+            setCurrentAskNumber(getCurrentAskNumber() + 1);
+            setCurrentAskTerm(getAskSet().get(getCurrentAskNumber()));
             response.append("\n");
-            response.append(String.format("Print the definition of \"%s\":", getDeck().getSpecificFlashcard(getCurrentCardNumber()).getTerm()));
+            response.append(String.format("Print the definition of \"%s\":", getCurrentAskTerm()));
         } else {
-            setState(State.END);
+            setState(State.MENU);
         }
         return response.toString();
     }
 
+    // IMPORT
+    private String handleImport(String file) {
+        setState(State.MENU);
+        return getDeck().importCardsFromFile(file);
+    }
+
+    // EXPORT
+    private String handleExport(String file) {
+        setState(State.MENU);
+        return getDeck().exportCardsToFile(file);
+    }
+
+    // PROCESS INPUT
     protected String processInput(String input) {
         switch(getState()) {
             case MENU:
@@ -93,8 +142,17 @@ public class StateMachine {
             case REMOVE:
                 return handleRemove(input);
 
-            case ANSWER:
-                return handleAnswer(input);
+            case IMPORT:
+                return handleImport(input);
+
+            case EXPORT:
+                return handleExport(input);
+
+            case GET_ASK_NUMBER:
+                return handleAskNumber(input);
+
+            case ASK:
+                return handleAsk(input);
 
             default:
                 return "";
@@ -127,11 +185,35 @@ public class StateMachine {
         this.currentCard = currentCard;
     }
 
-    private int getCurrentCardNumber() {
-        return currentCardNumber;
+    public int getAskNumber() {
+        return askNumber;
     }
 
-    private void setCurrentCardNumber(int currentCardNumber) {
-        this.currentCardNumber = currentCardNumber;
+    public void setAskNumber(int askNumber) {
+        this.askNumber = askNumber;
+    }
+
+    public int getCurrentAskNumber() {
+        return currentAskNumber;
+    }
+
+    public void setCurrentAskNumber(int currentAskNumber) {
+        this.currentAskNumber = currentAskNumber;
+    }
+
+    public ArrayList<String> getAskSet() {
+        return askSet;
+    }
+
+    public void setAskSet(ArrayList<String> askSet) {
+        this.askSet = askSet;
+    }
+
+    public String getCurrentAskTerm() {
+        return currentAskTerm;
+    }
+
+    public void setCurrentAskTerm(String currentAskTerm) {
+        this.currentAskTerm = currentAskTerm;
     }
 }

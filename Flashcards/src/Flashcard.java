@@ -4,11 +4,7 @@ public class Flashcard {
     private String definition;
 
     public Flashcard() {
-    }
 
-    @Override
-    public String toString() {
-        return this.getDefinition();
     }
 
     // getters and setters
