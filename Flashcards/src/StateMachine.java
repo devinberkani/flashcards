@@ -2,7 +2,6 @@ import java.util.ArrayList;
 
 public class StateMachine {
     private State state;
-    private final Menu menu;
     private final Deck deck;
     private Flashcard currentCard;
 
@@ -13,7 +12,6 @@ public class StateMachine {
     private String currentAskTerm;
     public StateMachine() {
         state = State.MENU;
-        menu = new Menu();
         deck = new Deck();
     }
 
@@ -95,10 +93,10 @@ public class StateMachine {
 
     private String handleAsk(String userAnswer) {
         StringBuilder response = new StringBuilder();
-        if (getDeck().answerIsCorrect(userAnswer, getCurrentAskTerm().hashCode())) {
+        if (getDeck().answerIsCorrect(getCurrentAskTerm(), userAnswer)) {
             response.append("Correct!");
         } else {
-            response.append(String.format("Wrong. The right answer is \"%s\"", getDeck().correctDefinitionForCurrentCard(getCurrentAskTerm().hashCode())));
+            response.append(String.format("Wrong. The right answer is \"%s\"", getDeck().correctDefinitionForCurrentCard(getCurrentAskTerm())));
             if (getDeck().definitionExists(userAnswer)) {
                 response.append(String.format(", but your definition is correct for \"%s\"", getDeck().correctTermForDifferentCard(userAnswer)));
             }
@@ -167,10 +165,6 @@ public class StateMachine {
 
     private void setState(State state) {
         this.state = state;
-    }
-
-    public Menu getMenu() {
-        return menu;
     }
 
     private Deck getDeck() {
